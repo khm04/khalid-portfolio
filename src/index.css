@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DESIGN SYSTEM: Golden Hour Cinematic
+   - Background: deep warm charcoal
+   - Primary accent: warm gold
+   - Secondary: dusty rose
+   - Tertiary: cream
+   - Typography: Cormorant Garamond (display) + DM Sans (body)
+   ============================================================ */
+
+@theme {
+  --color-bg: oklch(0.14 0.018 55);
+  --color-bg-elev: oklch(0.17 0.018 55);
+  --color-bg-deep: oklch(0.10 0.015 55);
+  --color-fg: oklch(0.92 0.02 75);
+  --color-fg-muted: oklch(0.60 0.03 65);
+  --color-gold: oklch(0.72 0.12 65);
+  --color-gold-bright: oklch(0.78 0.13 65);
+  --color-rose: oklch(0.60 0.08 30);
+
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "DM Sans", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href] {
+  cursor: pointer;
+}
+
+/* ── Custom utilities ── */
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    oklch(0.72 0.12 65 / 0.7),
+    transparent
+  );
+}
+
+.section-number {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 12vw, 10rem);
+  font-weight: 700;
+  color: oklch(0.72 0.12 65 / 0.08);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    oklch(0.10 0.015 55 / 0.85) 100%
+  );
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.72 0.12 65 / 0.4);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.72 0.12 65 / 0.7);
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes kenBurns {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}
+@keyframes bounceArrow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+.animate-fade-up    { animation: fadeUp 0.8s ease forwards; opacity: 0; }
+.animate-fade-in    { animation: fadeIn 0.8s ease forwards; opacity: 0; }
+.animate-ken-burns  { animation: kenBurns 8s ease-out forwards; }
+.animate-bounce-arrow { animation: bounceArrow 1.8s ease-in-out infinite; }
+
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
