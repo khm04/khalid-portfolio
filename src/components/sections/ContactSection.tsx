@@ -170,7 +170,7 @@ export default function ContactSection() {
                     className="text-[oklch(0.80_0.02_75)] text-sm"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
-                    Jordan · Available Worldwide
+                    Jordan
                   </p>
                 </div>
               </div>

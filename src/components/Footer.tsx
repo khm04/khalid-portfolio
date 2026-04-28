@@ -30,7 +30,7 @@ export default function Footer() {
 
           {/* Nav */}
           <nav className="flex flex-wrap justify-center gap-6">
-            {["home", "about", "certificates", "frames", "videography", "services", "contact"].map((item) => (
+            {["home", "about", "videography", "frames", "certificates", "contact"].map((item) => (
               <button
                 key={item}
                 onClick={() => handleNav(item)}

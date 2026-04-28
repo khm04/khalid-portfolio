@@ -40,7 +40,7 @@ export default function AboutSection() {
           }`}
           style={{ fontFamily: "var(--font-body)" }}
         >
-          — About Khalid
+          — About Me
         </p>
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
