@@ -179,7 +179,7 @@ export default function VideographySection() {
       className="relative py-24 lg:py-36 overflow-hidden"
     >
       <div className="absolute inset-0 bg-[oklch(0.12_0.015_55/0.6)]" />
-      <div className="absolute -left-4 top-8 section-number">03</div>
+      <div className="absolute -left-2 top-8 section-number">3</div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}

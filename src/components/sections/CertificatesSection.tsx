@@ -33,7 +33,7 @@ export default function CertificatesSection() {
       ref={ref}
       className="relative py-24 lg:py-32 overflow-hidden"
     >
-      <div className="absolute -right-4 top-8 section-number">05</div>
+      <div className="absolute -right-2 top-8 section-number">5</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
@@ -145,12 +145,6 @@ export default function CertificatesSection() {
           </div>
         )}
 
-        <p
-          className="text-center text-[oklch(0.40_0.02_75)] text-xs mt-10"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          More credentials added as new training is completed.
-        </p>
       </div>
 
       {/* Lightbox */}
