@@ -38,7 +38,7 @@ export function useAuth() {
     return supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
+        emailRedirectTo: `https://khalidportfolio.com/admin`,
       },
     });
   };
