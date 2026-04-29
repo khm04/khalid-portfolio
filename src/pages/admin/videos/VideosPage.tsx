@@ -62,11 +62,17 @@ export default function VideosPage() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: vids }, { data: gens }] = await Promise.all([
-      supabase.from("videos").select("*, video_genres(genre_id)").order("sort_order"),
+    const [{ data: vids }, { data: gens }, { data: junctions }] = await Promise.all([
+      supabase.from("videos").select("*").order("sort_order"),
       supabase.from("genres").select("*").order("sort_order"),
+      supabase.from("video_genres").select("video_id, genre_id"),
     ]);
-    setVideos(vids ?? []);
+    const allJunctions = junctions ?? [];
+    const videosWithGenres = (vids ?? []).map((v) => ({
+      ...v,
+      video_genres: allJunctions.filter((j) => j.video_id === v.id).map((j) => ({ genre_id: j.genre_id })),
+    }));
+    setVideos(videosWithGenres);
     setGenres(gens ?? []);
     setLoading(false);
   };
@@ -151,8 +157,13 @@ export default function VideosPage() {
   };
 
   const handleMove = async (index: number, dir: "up" | "down") => {
-    const updated = await moveItem("videos", videos, index, dir);
-    setVideos(updated);
+    try {
+      const updated = await moveItem("videos", videos, index, dir);
+      setVideos(updated);
+    } catch (e) {
+      toast.error("Couldn't reorder: " + (e as Error).message);
+      load();
+    }
   };
 
   const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (

@@ -15,11 +15,14 @@ export async function moveItem<T extends { id: string; sort_order: number }>(
 
   const normalized = reordered.map((item, i) => ({ ...item, sort_order: i }));
 
-  await Promise.all(
+  const results = await Promise.all(
     normalized.map((item) =>
       supabase.from(table).update({ sort_order: item.sort_order }).eq("id", item.id)
     )
   );
+
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw new Error(failed.error.message);
 
   return normalized;
 }
