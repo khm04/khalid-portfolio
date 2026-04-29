@@ -101,8 +101,15 @@ function GenreSection({ section, onOpen, inView, delay }: {
           {section.videos.length} {section.videos.length === 1 ? "film" : "films"}
         </span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {section.videos.map((v) => <VideoCard key={v.id} project={v} onOpen={onOpen} />)}
+      <div
+        className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {section.videos.map((v) => (
+          <div key={v.id} className="snap-start flex-shrink-0 w-[78vw] md:w-auto">
+            <VideoCard project={v} onOpen={onOpen} />
+          </div>
+        ))}
       </div>
     </div>
   );
