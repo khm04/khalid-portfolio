@@ -31,7 +31,7 @@ export default function AboutSection() {
       ref={ref}
       className="relative py-24 lg:py-36 overflow-hidden"
     >
-      <div className="absolute -left-2 top-8 section-number">2</div>
+      <div className="absolute left-2 top-8 section-number">2</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         <p

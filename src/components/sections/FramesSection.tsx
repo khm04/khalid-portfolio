@@ -34,7 +34,7 @@ export default function FramesSection() {
       ref={ref}
       className="relative py-24 lg:py-36 overflow-hidden"
     >
-      <div className="absolute -right-2 top-8 section-number">4</div>
+      <div className="absolute right-2 top-8 section-number">4</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
