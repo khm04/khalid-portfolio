@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { moveItem } from "@/lib/adminUtils";
-import { Loader2, Plus, Trash2, ChevronUp, ChevronDown, Tag } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronUp, ChevronDown, Tag, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 type Genre = {
@@ -15,6 +15,9 @@ export default function GenresPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const inputClass =
     "w-full bg-[oklch(0.20_0.018_55)] border border-white/8 text-[oklch(0.88_0.02_75)] placeholder-[oklch(0.40_0.02_75)] px-3 py-2 text-sm outline-none focus:border-[oklch(0.72_0.12_65/0.6)] transition-colors";
@@ -38,6 +41,29 @@ export default function GenresPage() {
     toast.success("Genre added!");
     setName("");
     load();
+  };
+
+  const startEdit = (g: Genre) => {
+    setEditingId(g.id);
+    setEditingName(g.name);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleRename = async (g: Genre) => {
+    const n = editingName.trim();
+    if (!n) { toast.error("Genre name is required."); return; }
+    if (n === g.name) { cancelEdit(); return; }
+    setEditSaving(true);
+    const { error } = await supabase.from("genres").update({ name: n }).eq("id", g.id);
+    setEditSaving(false);
+    if (error) { toast.error("Couldn't rename: " + error.message); return; }
+    setGenres((p) => p.map((x) => x.id === g.id ? { ...x, name: n } : x));
+    toast.success("Genre renamed!");
+    cancelEdit();
   };
 
   const remove = async (g: Genre) => {
@@ -93,12 +119,37 @@ export default function GenresPage() {
           {genres.map((g, i) => (
             <div key={g.id} className="flex items-center gap-4 p-4 bg-[oklch(0.17_0.018_55)] border border-white/8">
               <Tag size={14} className="text-[oklch(0.72_0.12_65)] flex-shrink-0" />
-              <span className="flex-1 text-[oklch(0.88_0.02_75)] text-sm" style={{ fontFamily: "var(--font-body)" }}>{g.name}</span>
-              <div className="flex flex-col gap-0.5">
-                <button onClick={() => handleMove(i, "up")} disabled={i === 0} className="p-1 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.72_0.12_65)] disabled:opacity-30 transition-colors"><ChevronUp size={13} /></button>
-                <button onClick={() => handleMove(i, "down")} disabled={i === genres.length - 1} className="p-1 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.72_0.12_65)] disabled:opacity-30 transition-colors"><ChevronDown size={13} /></button>
-              </div>
-              <button onClick={() => remove(g)} className="p-1.5 text-[oklch(0.45_0.02_75)] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+
+              {editingId === g.id ? (
+                <input
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleRename(g); if (e.key === "Escape") cancelEdit(); }}
+                  autoFocus
+                  className="flex-1 bg-[oklch(0.20_0.018_55)] border border-[oklch(0.72_0.12_65/0.6)] text-[oklch(0.88_0.02_75)] px-3 py-1 text-sm outline-none"
+                  style={{ fontFamily: "var(--font-body)" }}
+                />
+              ) : (
+                <span className="flex-1 text-[oklch(0.88_0.02_75)] text-sm" style={{ fontFamily: "var(--font-body)" }}>{g.name}</span>
+              )}
+
+              {editingId === g.id ? (
+                <div className="flex items-center gap-1">
+                  <button onClick={() => handleRename(g)} disabled={editSaving} className="p-1.5 text-[oklch(0.72_0.12_65)] hover:text-[oklch(0.85_0.13_65)] transition-colors disabled:opacity-60">
+                    {editSaving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                  </button>
+                  <button onClick={cancelEdit} className="p-1.5 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.70_0.02_75)] transition-colors"><X size={13} /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="flex flex-col gap-0.5">
+                    <button onClick={() => handleMove(i, "up")} disabled={i === 0} className="p-1 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.72_0.12_65)] disabled:opacity-30 transition-colors"><ChevronUp size={13} /></button>
+                    <button onClick={() => handleMove(i, "down")} disabled={i === genres.length - 1} className="p-1 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.72_0.12_65)] disabled:opacity-30 transition-colors"><ChevronDown size={13} /></button>
+                  </div>
+                  <button onClick={() => startEdit(g)} className="p-1.5 text-[oklch(0.45_0.02_75)] hover:text-[oklch(0.72_0.12_65)] transition-colors"><Pencil size={14} /></button>
+                  <button onClick={() => remove(g)} className="p-1.5 text-[oklch(0.45_0.02_75)] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                </div>
+              )}
             </div>
           ))}
         </div>
