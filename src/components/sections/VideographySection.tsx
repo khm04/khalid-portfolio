@@ -155,6 +155,7 @@ export default function VideographySection() {
       setShowreel(reel);
       setGenreSections(sections);
       setOtherVideos(other);
+      setActiveId(sections[0]?.id ?? null);
       setLoading(false);
     };
     load();
