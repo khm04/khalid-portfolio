@@ -145,7 +145,8 @@ export default function VideographySection() {
         const vids = allJunctions
           .filter((j) => j.genre_id === g.id)
           .map((j) => nonShowreel.find((v) => v.id === j.video_id))
-          .filter((v): v is Video => v !== undefined);
+          .filter((v): v is Video => v !== undefined)
+          .sort((a, b) => a.sort_order - b.sort_order);
         return { id: g.id, name: g.name, videos: vids };
       }).filter((s) => s.videos.length > 0);
 
