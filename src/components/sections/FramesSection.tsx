@@ -80,16 +80,16 @@ export default function FramesSection() {
           </div>
         ) : (
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-all duration-700 ${
+            className={`flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 transition-all duration-700 ${
               inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
-            style={{ transitionDelay: "150ms" }}
+            style={{ transitionDelay: "150ms", scrollbarWidth: "none" }}
           >
             {frames.map((frame) => (
               <button
                 key={frame.id}
                 onClick={() => setLightbox(frame)}
-                className={`relative group overflow-hidden text-left ${
+                className={`snap-start flex-shrink-0 w-[78vw] sm:w-auto relative group overflow-hidden text-left ${
                   frame.span === "tall" ? "sm:row-span-2" : ""
                 } ${frame.span === "wide" ? "sm:col-span-2" : ""}`}
                 style={{
