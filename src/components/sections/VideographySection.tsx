@@ -18,6 +18,7 @@ type Video = {
 
 type Genre = { id: string; name: string; sort_order: number };
 type Junction = { video_id: string; genre_id: string };
+type Section = { id: string; name: string; videos: Video[] };
 
 const FALLBACK_SHOWREEL_THUMB =
   "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=2000&q=80";
@@ -73,29 +74,36 @@ function VideoCard({ project, onOpen }: { project: Video; onOpen: (v: Video) => 
   );
 }
 
-function GenreSection({ name, videos, onOpen, inView, delay }: {
-  name: string;
-  videos: Video[];
+function GenreSection({ section, onOpen, inView, delay, dimmed }: {
+  section: Section;
   onOpen: (v: Video) => void;
   inView: boolean;
   delay: number;
+  dimmed: boolean;
 }) {
   return (
     <div
-      className={`mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+      className={`mb-16 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"} ${dimmed ? "opacity-20 saturate-0 scale-[0.99]" : ""}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-4 mb-6">
         <h3
-          className="text-[oklch(0.92_0.02_75)]"
+          className={`transition-colors duration-400 ${dimmed ? "text-[oklch(0.55_0.02_75)]" : "text-[oklch(0.92_0.02_75)]"}`}
           style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.3rem, 2.5vw, 1.8rem)", fontWeight: 500 }}
         >
-          {name}
+          {section.name}
         </h3>
+        {!dimmed && <div className="w-8 h-px bg-[oklch(0.72_0.12_65/0.6)]" />}
         <div className="flex-1 h-px bg-white/8" />
+        <span
+          className={`text-[9px] tracking-[0.25em] uppercase transition-opacity duration-400 ${dimmed ? "opacity-0" : "opacity-100 text-[oklch(0.45_0.02_75)]"}`}
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          {section.videos.length} {section.videos.length === 1 ? "film" : "films"}
+        </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {videos.map((v) => <VideoCard key={v.id} project={v} onOpen={onOpen} />)}
+        {section.videos.map((v) => <VideoCard key={v.id} project={v} onOpen={onOpen} />)}
       </div>
     </div>
   );
@@ -104,12 +112,12 @@ function GenreSection({ name, videos, onOpen, inView, delay }: {
 export default function VideographySection() {
   const { ref, inView } = useInView<HTMLElement>(0.05);
   const [showreel, setShowreel] = useState<Video | null>(null);
-  const [genreSections, setGenreSections] = useState<{ id: string; name: string; videos: Video[] }[]>([]);
+  const [genreSections, setGenreSections] = useState<Section[]>([]);
   const [otherVideos, setOtherVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalUrl, setModalUrl] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string | undefined>();
-
+  const [activeId, setActiveId] = useState<string | null>(null);
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -125,7 +133,6 @@ export default function VideographySection() {
 
       const reel = allVideos.find((v) => v.is_showreel) ?? null;
       const nonShowreel = allVideos.filter((v) => !v.is_showreel);
-
       const assignedIds = new Set(allJunctions.map((j) => j.video_id));
 
       const sections = allGenres.map((g) => {
@@ -154,6 +161,11 @@ export default function VideographySection() {
 
   const hasRealData = showreel !== null || genreSections.length > 0 || otherVideos.length > 0;
   const showFallback = !hasRealData && !loading;
+  const allSections: Section[] = [
+    ...genreSections,
+    ...(otherVideos.length > 0 ? [{ id: "other", name: "Other", videos: otherVideos }] : []),
+  ];
+  const hasFilter = activeId !== null;
 
   return (
     <section
@@ -228,28 +240,80 @@ export default function VideographySection() {
               </div>
             </div>
 
+            {/* Genre filter tabs */}
+            {!showFallback && allSections.length > 1 && (
+              <div
+                className={`mb-12 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: "250ms" }}
+              >
+                <div
+                  className="flex border-b border-white/8 overflow-x-auto"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {/* All tab */}
+                  <button
+                    onClick={() => setActiveId(null)}
+                    className="relative flex-shrink-0 px-5 py-3.5 text-[9px] tracking-[0.35em] uppercase transition-colors duration-300 group"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    <span className={activeId === null ? "text-[oklch(0.72_0.12_65)]" : "text-[oklch(0.40_0.02_75)] group-hover:text-[oklch(0.65_0.02_75)]"}>
+                      All
+                    </span>
+                    <span
+                      className={`absolute bottom-0 left-0 right-0 h-px transition-all duration-300 ${activeId === null ? "bg-[oklch(0.72_0.12_65)] opacity-100" : "bg-transparent opacity-0"}`}
+                    />
+                  </button>
+
+                  {/* Divider */}
+                  <div className="w-px h-6 self-end mb-px bg-white/8 flex-shrink-0" />
+
+                  {/* Genre tabs */}
+                  {allSections.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setActiveId(activeId === s.id ? null : s.id)}
+                      className="relative flex-shrink-0 px-5 py-3.5 text-[9px] tracking-[0.35em] uppercase transition-colors duration-300 group"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      <span className={activeId === s.id ? "text-[oklch(0.72_0.12_65)]" : "text-[oklch(0.40_0.02_75)] group-hover:text-[oklch(0.65_0.02_75)]"}>
+                        {s.name}
+                      </span>
+                      <span
+                        className={`absolute bottom-0 left-0 right-0 h-px transition-all duration-300 ${activeId === s.id ? "bg-[oklch(0.72_0.12_65)] opacity-100" : "bg-transparent opacity-0"}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                {/* Active genre subtitle */}
+                <div className="h-6 mt-3 flex items-center">
+                  {hasFilter && (
+                    <p
+                      className="text-[oklch(0.45_0.02_75)] text-[9px] tracking-[0.3em] uppercase animate-fade-in"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      Showing: <span className="text-[oklch(0.72_0.12_65)]">{allSections.find(s => s.id === activeId)?.name}</span>
+                      <span className="mx-2">·</span>
+                      <button onClick={() => setActiveId(null)} className="text-[oklch(0.40_0.02_75)] hover:text-[oklch(0.60_0.02_75)] transition-colors underline underline-offset-2">
+                        clear
+                      </button>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Genre sections */}
-            {!showFallback && genreSections.map((section, i) => (
+            {!showFallback && allSections.map((section, i) => (
               <GenreSection
                 key={section.id}
-                name={section.name}
-                videos={section.videos}
+                section={section}
                 onOpen={openModal}
                 inView={inView}
                 delay={300 + i * 150}
+                dimmed={hasFilter && activeId !== section.id}
               />
             ))}
-
-            {/* Other / unassigned */}
-            {!showFallback && otherVideos.length > 0 && (
-              <GenreSection
-                name="Other"
-                videos={otherVideos}
-                onOpen={openModal}
-                inView={inView}
-                delay={300 + genreSections.length * 150}
-              />
-            )}
 
             {/* Fallback when no DB data */}
             {showFallback && (
