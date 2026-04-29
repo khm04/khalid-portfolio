@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
-import { useSupabaseList } from "@/lib/useSupabaseList";
+import { supabase } from "@/lib/supabase";
 import VideoModal from "@/components/VideoModal";
 import { Play, Film, Loader2 } from "lucide-react";
 
@@ -16,30 +16,144 @@ type Video = {
   sort_order: number;
 };
 
+type Genre = { id: string; name: string; sort_order: number };
+type Junction = { video_id: string; genre_id: string };
+
 const FALLBACK_SHOWREEL_THUMB =
   "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=2000&q=80";
 
 const FALLBACK_PROJECTS: Video[] = [
-  { id: "1", thumb_url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80", title: "A Love Story in Amman",    category: "Wedding Film", duration: "4:32",  year: "2024", embed_url: "", is_showreel: false, sort_order: 1 },
+  { id: "1", thumb_url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80", title: "A Love Story in Amman",      category: "Wedding Film", duration: "4:32",  year: "2024", embed_url: "", is_showreel: false, sort_order: 1 },
   { id: "2", thumb_url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=900&q=80", title: "Into the Wild — Travel Doc", category: "Documentary",  duration: "12:15", year: "2024", embed_url: "", is_showreel: false, sort_order: 2 },
   { id: "3", thumb_url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80", title: "Soleil — Fashion Campaign",  category: "Commercial",   duration: "2:48",  year: "2023", embed_url: "", is_showreel: false, sort_order: 3 },
 ];
 
+function VideoCard({ project, onOpen }: { project: Video; onOpen: (v: Video) => void }) {
+  return (
+    <button
+      onClick={() => onOpen(project)}
+      className="group relative overflow-hidden text-left border border-white/5 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400"
+    >
+      <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
+        <img
+          src={project.thumb_url}
+          alt={project.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-[oklch(0.10_0.015_55/0.50)] group-hover:bg-[oklch(0.10_0.015_55/0.30)] transition-colors duration-400" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="w-12 h-12 rounded-full border border-[oklch(0.72_0.12_65)] flex items-center justify-center">
+            <Play size={16} className="text-[oklch(0.72_0.12_65)] ml-0.5" fill="currentColor" />
+          </div>
+        </div>
+        {project.duration && (
+          <span
+            className="absolute bottom-2 right-2 bg-black/70 text-[oklch(0.92_0.02_75)] text-[9px] px-2 py-0.5 tracking-wider"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            {project.duration}
+          </span>
+        )}
+      </div>
+      <div className="p-4 bg-[oklch(0.17_0.018_55)]">
+        <p
+          className="text-[oklch(0.72_0.12_65)] text-[9px] tracking-[0.25em] uppercase mb-1"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          {project.category}{project.year ? ` · ${project.year}` : ""}
+        </p>
+        <h3
+          className="text-[oklch(0.88_0.02_75)] text-lg font-medium leading-tight"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {project.title}
+        </h3>
+      </div>
+    </button>
+  );
+}
+
+function GenreSection({ name, videos, onOpen, inView, delay }: {
+  name: string;
+  videos: Video[];
+  onOpen: (v: Video) => void;
+  inView: boolean;
+  delay: number;
+}) {
+  return (
+    <div
+      className={`mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="flex items-center gap-4 mb-6">
+        <h3
+          className="text-[oklch(0.92_0.02_75)]"
+          style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.3rem, 2.5vw, 1.8rem)", fontWeight: 500 }}
+        >
+          {name}
+        </h3>
+        <div className="flex-1 h-px bg-white/8" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {videos.map((v) => <VideoCard key={v.id} project={v} onOpen={onOpen} />)}
+      </div>
+    </div>
+  );
+}
+
 export default function VideographySection() {
   const { ref, inView } = useInView<HTMLElement>(0.05);
-  const { data, loading } = useSupabaseList<Video>("videos");
+  const [showreel, setShowreel] = useState<Video | null>(null);
+  const [genreSections, setGenreSections] = useState<{ id: string; name: string; videos: Video[] }[]>([]);
+  const [otherVideos, setOtherVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalUrl, setModalUrl] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string | undefined>();
 
-  const showreel = data.find((v) => v.is_showreel) ?? null;
-  const projects = data.filter((v) => !v.is_showreel);
-  const displayProjects = projects.length > 0 ? projects : FALLBACK_PROJECTS;
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [{ data: videos }, { data: genres }, { data: junctions }] = await Promise.all([
+        supabase.from("videos").select("*").order("sort_order"),
+        supabase.from("genres").select("*").order("sort_order"),
+        supabase.from("video_genres").select("video_id, genre_id"),
+      ]);
+
+      const allVideos: Video[] = videos ?? [];
+      const allGenres: Genre[] = genres ?? [];
+      const allJunctions: Junction[] = junctions ?? [];
+
+      const reel = allVideos.find((v) => v.is_showreel) ?? null;
+      const nonShowreel = allVideos.filter((v) => !v.is_showreel);
+
+      const assignedIds = new Set(allJunctions.map((j) => j.video_id));
+
+      const sections = allGenres.map((g) => {
+        const vids = allJunctions
+          .filter((j) => j.genre_id === g.id)
+          .map((j) => nonShowreel.find((v) => v.id === j.video_id))
+          .filter((v): v is Video => v !== undefined);
+        return { id: g.id, name: g.name, videos: vids };
+      }).filter((s) => s.videos.length > 0);
+
+      const other = nonShowreel.filter((v) => !assignedIds.has(v.id));
+
+      setShowreel(reel);
+      setGenreSections(sections);
+      setOtherVideos(other);
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   const openModal = (video: Video) => {
     if (!video.embed_url) return;
     setModalTitle(video.title);
     setModalUrl(video.embed_url);
   };
+
+  const hasRealData = showreel !== null || genreSections.length > 0 || otherVideos.length > 0;
+  const showFallback = !hasRealData && !loading;
 
   return (
     <section
@@ -48,13 +162,12 @@ export default function VideographySection() {
       className="relative py-24 lg:py-36 overflow-hidden"
     >
       <div className="absolute inset-0 bg-[oklch(0.12_0.015_55/0.6)]" />
+      <div className="absolute -left-4 top-8 section-number">03</div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
         <div
-          className={`mb-12 transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`mb-12 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
         >
           <p
             className="text-[oklch(0.72_0.12_65)] text-[10px] tracking-[0.4em] uppercase mb-3"
@@ -64,12 +177,7 @@ export default function VideographySection() {
           </p>
           <h2
             className="text-[oklch(0.92_0.02_75)]"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)",
-              fontWeight: 500,
-              lineHeight: 1.05,
-            }}
+            style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 500, lineHeight: 1.05 }}
           >
             Motion Pictures,
             <br />
@@ -85,9 +193,7 @@ export default function VideographySection() {
           <>
             {/* Showreel */}
             <div
-              className={`relative w-full overflow-hidden mb-16 transition-all duration-900 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-              }`}
+              className={`relative w-full overflow-hidden mb-16 transition-all duration-900 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
               style={{ transitionDelay: "150ms", aspectRatio: "16/9", maxHeight: 520 }}
             >
               <img
@@ -122,57 +228,40 @@ export default function VideographySection() {
               </div>
             </div>
 
-            {/* Project cards */}
-            <div
-              className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-700 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-              }`}
-              style={{ transitionDelay: "300ms" }}
-            >
-              {displayProjects.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => openModal(project)}
-                  className="group relative overflow-hidden text-left border border-white/5 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400"
-                >
-                  <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
-                    <img
-                      src={project.thumb_url}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-[oklch(0.10_0.015_55/0.50)] group-hover:bg-[oklch(0.10_0.015_55/0.30)] transition-colors duration-400" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-12 h-12 rounded-full border border-[oklch(0.72_0.12_65)] flex items-center justify-center">
-                        <Play size={16} className="text-[oklch(0.72_0.12_65)] ml-0.5" fill="currentColor" />
-                      </div>
-                    </div>
-                    {project.duration && (
-                      <span
-                        className="absolute bottom-2 right-2 bg-black/70 text-[oklch(0.92_0.02_75)] text-[9px] px-2 py-0.5 tracking-wider"
-                        style={{ fontFamily: "var(--font-body)" }}
-                      >
-                        {project.duration}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-4 bg-[oklch(0.17_0.018_55)]">
-                    <p
-                      className="text-[oklch(0.72_0.12_65)] text-[9px] tracking-[0.25em] uppercase mb-1"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    >
-                      {project.category}{project.year ? ` · ${project.year}` : ""}
-                    </p>
-                    <h3
-                      className="text-[oklch(0.88_0.02_75)] text-lg font-medium leading-tight"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
-                      {project.title}
-                    </h3>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {/* Genre sections */}
+            {!showFallback && genreSections.map((section, i) => (
+              <GenreSection
+                key={section.id}
+                name={section.name}
+                videos={section.videos}
+                onOpen={openModal}
+                inView={inView}
+                delay={300 + i * 150}
+              />
+            ))}
+
+            {/* Other / unassigned */}
+            {!showFallback && otherVideos.length > 0 && (
+              <GenreSection
+                name="Other"
+                videos={otherVideos}
+                onOpen={openModal}
+                inView={inView}
+                delay={300 + genreSections.length * 150}
+              />
+            )}
+
+            {/* Fallback when no DB data */}
+            {showFallback && (
+              <div
+                className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+                style={{ transitionDelay: "300ms" }}
+              >
+                {FALLBACK_PROJECTS.map((project) => (
+                  <VideoCard key={project.id} project={project} onOpen={openModal} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
