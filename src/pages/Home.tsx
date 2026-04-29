@@ -5,6 +5,7 @@ import AboutSection from "@/components/sections/AboutSection";
 import VideographySection from "@/components/sections/VideographySection";
 import FramesSection from "@/components/sections/FramesSection";
 import CertificatesSection from "@/components/sections/CertificatesSection";
+import ScheduleSection from "@/components/sections/ScheduleSection";
 import ContactSection from "@/components/sections/ContactSection";
 
 export default function Home() {
@@ -20,6 +21,8 @@ export default function Home() {
       <FramesSection />
       <div className="gold-rule" />
       <CertificatesSection />
+      <div className="gold-rule" />
+      <ScheduleSection />
       <div className="gold-rule" />
       <ContactSection />
       <Footer />

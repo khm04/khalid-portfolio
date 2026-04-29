@@ -13,6 +13,7 @@ import CertificatesPage from "@/pages/admin/certificates/CertificatesPage";
 import TestimonialsPage from "@/pages/admin/testimonials/TestimonialsPage";
 import SettingsPage from "@/pages/admin/settings/SettingsPage";
 import GenresPage from "@/pages/admin/genres/GenresPage";
+import SchedulePage from "@/pages/admin/schedule/SchedulePage";
 
 function AdminApp() {
   return (
@@ -26,6 +27,7 @@ function AdminApp() {
           <Route path="/admin/certificates" component={CertificatesPage} />
           <Route path="/admin/testimonials" component={TestimonialsPage} />
           <Route path="/admin/genres"       component={GenresPage} />
+          <Route path="/admin/schedule"    component={SchedulePage} />
           <Route path="/admin/settings"    component={SettingsPage} />
           <Route component={NotFound} />
         </Switch>

@@ -123,6 +123,23 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["testimonials"]["Insert"]>;
       };
+      availability: {
+        Row: {
+          id: string;
+          date: string;
+          hour: number | null;
+          is_full_day: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          date: string;
+          hour?: number | null;
+          is_full_day?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["availability"]["Insert"]>;
+      };
       site_settings: {
         Row: {
           id: number;

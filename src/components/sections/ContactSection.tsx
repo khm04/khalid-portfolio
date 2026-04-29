@@ -59,7 +59,7 @@ export default function ContactSection() {
 
   return (
     <section id="contact" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
-      <div className="absolute right-2 top-8 section-number">6</div>
+      <div className="absolute right-2 top-8 section-number">7</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
