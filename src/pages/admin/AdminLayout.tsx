@@ -5,7 +5,7 @@
 import { useAuth } from "@/lib/useAuth";
 import {
   MessageSquare, Image, Film,
-  Award, Star, Home, LogOut, Menu, X, ChevronRight, Settings,
+  Award, Star, Home, LogOut, Menu, X, ChevronRight, Settings, Tag, CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -14,8 +14,10 @@ const navItems = [
   { icon: MessageSquare,  label: "Messages",     href: "/admin/messages" },
   { icon: Image,          label: "Frames",       href: "/admin/frames" },
   { icon: Film,           label: "Videos",       href: "/admin/videos" },
+  { icon: Tag,            label: "Genres",       href: "/admin/genres" },
   { icon: Award,          label: "Certificates", href: "/admin/certificates" },
   { icon: Star,           label: "Testimonials", href: "/admin/testimonials" },
+  { icon: CalendarDays,   label: "Schedule",     href: "/admin/schedule" },
   { icon: Settings,       label: "Settings",     href: "/admin/settings" },
 ];
 

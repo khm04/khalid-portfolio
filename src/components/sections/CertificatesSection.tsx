@@ -33,7 +33,7 @@ export default function CertificatesSection() {
       ref={ref}
       className="relative py-24 lg:py-32 overflow-hidden"
     >
-      <div className="absolute -right-4 top-8 section-number">05</div>
+      <div className="absolute right-2 top-8 section-number">5</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
@@ -69,16 +69,16 @@ export default function CertificatesSection() {
           </div>
         ) : (
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 transition-all duration-700 ${
+            className={`flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 -mx-6 px-6 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 transition-all duration-700 ${
               inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
-            style={{ transitionDelay: "150ms" }}
+            style={{ transitionDelay: "150ms", scrollbarWidth: "none" }}
           >
             {certs.map((cert) => (
               <button
                 key={cert.id}
                 onClick={() => cert.logo_url && setLightbox(cert)}
-                className={`group relative flex flex-col bg-[oklch(0.17_0.018_55)] border border-white/8 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400 hover:-translate-y-1 text-left overflow-hidden ${cert.logo_url ? "cursor-pointer" : "cursor-default"}`}
+                className={`snap-start flex-shrink-0 w-[78vw] sm:w-[42vw] lg:w-auto group relative flex flex-col bg-[oklch(0.17_0.018_55)] border border-white/8 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400 hover:-translate-y-1 text-left overflow-hidden ${cert.logo_url ? "cursor-pointer" : "cursor-default"}`}
               >
                 {/* Certificate image preview */}
                 {cert.logo_url && (
@@ -145,12 +145,6 @@ export default function CertificatesSection() {
           </div>
         )}
 
-        <p
-          className="text-center text-[oklch(0.40_0.02_75)] text-xs mt-10"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          More credentials added as new training is completed.
-        </p>
       </div>
 
       {/* Lightbox */}

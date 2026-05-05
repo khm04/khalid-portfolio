@@ -7,7 +7,7 @@ const FALLBACK_BLURB =
   "Cinematic storytelling through film. Every frame is a chapter, every edit a heartbeat.";
 
 export default function HeroSection() {
-  const { settings } = useSiteSettings();
+  const { settings, loading } = useSiteSettings();
 
   const bg = settings.hero_image_url || FALLBACK_BG;
   const stats = [
@@ -25,11 +25,13 @@ export default function HeroSection() {
     >
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={bg}
-          alt="Cinematic hero background"
-          className="w-full h-full object-cover animate-ken-burns"
-        />
+        {!loading && (
+          <img
+            src={bg}
+            alt="Cinematic hero background"
+            className="w-full h-full object-cover animate-ken-burns"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-[oklch(0.10_0.015_55/0.85)] via-[oklch(0.10_0.015_55/0.45)] to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.10_0.015_55/0.90)] via-transparent to-[oklch(0.10_0.015_55/0.30)]" />
         <div className="absolute inset-0 vignette" />

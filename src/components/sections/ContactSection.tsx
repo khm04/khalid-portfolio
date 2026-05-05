@@ -6,11 +6,12 @@
  */
 import { useInView } from "@/hooks/useInView";
 import { useState } from "react";
-import { Mail, Instagram, MapPin, Send } from "lucide-react";
+import { Mail, Instagram, MapPin, Phone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 const EMAIL = "khalidmasoud4321@gmail.com";
+const PHONE = "0795293873";
 const INSTAGRAM_HANDLE = "khalid._.masoud";
 const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
 
@@ -59,7 +60,7 @@ export default function ContactSection() {
 
   return (
     <section id="contact" ref={ref} className="relative py-24 lg:py-36 overflow-hidden">
-      <div className="absolute -right-4 top-8 section-number">06</div>
+      <div className="absolute right-2 top-8 section-number">7</div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
@@ -126,6 +127,29 @@ export default function ContactSection() {
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     {EMAIL}
+                  </p>
+                </div>
+              </a>
+
+              <a
+                href={`tel:${PHONE}`}
+                className="flex items-start gap-4 group"
+              >
+                <div className="w-9 h-9 border border-[oklch(0.72_0.12_65/0.4)] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[oklch(0.72_0.12_65/0.1)] transition-colors">
+                  <Phone size={14} className="text-[oklch(0.72_0.12_65)]" />
+                </div>
+                <div>
+                  <p
+                    className="text-[oklch(0.45_0.02_75)] text-[9px] tracking-[0.25em] uppercase mb-0.5"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    Phone
+                  </p>
+                  <p
+                    className="text-[oklch(0.80_0.02_75)] text-sm group-hover:text-[oklch(0.72_0.12_65)] transition-colors"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {PHONE}
                   </p>
                 </div>
               </a>
