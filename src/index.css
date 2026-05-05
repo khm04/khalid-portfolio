@@ -105,13 +105,90 @@ a[href] {
   50%      { transform: translateY(6px); }
 }
 
-.animate-fade-up    { animation: fadeUp 0.8s ease forwards; opacity: 0; }
-.animate-fade-in    { animation: fadeIn 0.8s ease forwards; opacity: 0; }
-.animate-ken-burns  { animation: kenBurns 8s ease-out forwards; }
-.animate-bounce-arrow { animation: bounceArrow 1.8s ease-in-out infinite; }
+.animate-fade-up    { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+.animate-fade-in    { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+.animate-ken-burns  { animation: kenBurns 10s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-bounce-arrow { animation: bounceArrow 2s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
 
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
 .delay-400 { animation-delay: 400ms; }
 .delay-500 { animation-delay: 500ms; }
 .delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-800 { animation-delay: 800ms; }
+
+/* ── Gold rule animated draw-in ── */
+@keyframes drawRule {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.animate-draw-rule {
+  transform-origin: left center;
+  animation: drawRule 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* ── Shimmer loading effect ── */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.72 0.12 65 / 0.0) 0%,
+    oklch(0.72 0.12 65 / 0.15) 50%,
+    oklch(0.72 0.12 65 / 0.0) 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* ── Magnetic button base ── */
+.btn-magnetic {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-magnetic:active {
+  transform: scale(0.97) translateY(1px);
+}
+
+/* ── Directional fill button ── */
+.btn-fill {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: oklch(0.78 0.13 65);
+  transform: translateX(-101%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
+}
+.btn-fill:hover::before {
+  transform: translateX(0);
+}
+
+/* ── Floating scroll indicator pulse ── */
+@keyframes floatPulse {
+  0%, 100% { transform: translateY(0) translateX(-50%); opacity: 0.7; }
+  50%       { transform: translateY(8px) translateX(-50%); opacity: 1; }
+}
+.animate-float-pulse {
+  animation: floatPulse 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* ── Skill tag reveal ── */
+@keyframes tagReveal {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-tag-reveal {
+  animation: tagReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
