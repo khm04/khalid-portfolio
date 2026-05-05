@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useInView } from "@/hooks/useInView";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSupabaseList } from "@/lib/useSupabaseList";
 import { Award, ExternalLink, Loader2, X, ZoomIn } from "lucide-react";
 
@@ -20,8 +20,21 @@ const FALLBACK: Certificate[] = [
   { id: "4", title: "Adobe Premiere Pro — Advanced",    issuer: "Adobe Certified Professional",   year: "2022", url: null, logo_url: null, sort_order: 3 },
 ];
 
+const spring = { type: "spring" as const, stiffness: 55, damping: 20 };
+
+const staggerCerts = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+};
+
+const certItem = {
+  hidden: { opacity: 0, y: 32, scale: 0.96 },
+  show: { opacity: 1, y: 0, scale: 1, transition: spring },
+};
+
 export default function CertificatesSection() {
-  const { ref, inView } = useInView<HTMLElement>(0.05);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const { data, loading } = useSupabaseList<Certificate>("certificates");
   const [lightbox, setLightbox] = useState<Certificate | null>(null);
 
@@ -37,10 +50,11 @@ export default function CertificatesSection() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div
-          className={`mb-12 transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        <motion.div
+          className="mb-12"
+          initial={{ opacity: 0, y: 28 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+          transition={spring}
         >
           <p
             className="text-[oklch(0.72_0.12_65)] text-[10px] tracking-[0.4em] uppercase mb-3"
@@ -61,24 +75,42 @@ export default function CertificatesSection() {
             <br />
             <em className="text-[oklch(0.72_0.12_65)]">&amp; Training</em>
           </h2>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex justify-center py-16">
             <Loader2 size={24} className="animate-spin text-[oklch(0.72_0.12_65)]" />
           </div>
         ) : (
-          <div
-            className={`flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 -mx-6 px-6 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 transition-all duration-700 ${
-              inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
-            style={{ transitionDelay: "150ms", scrollbarWidth: "none" }}
+          <motion.div
+            className="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 -mx-6 px-6 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0"
+            style={{ scrollbarWidth: "none" }}
+            variants={staggerCerts}
+            initial="hidden"
+            animate={inView ? "show" : "hidden"}
           >
             {certs.map((cert) => (
-              <button
+              <motion.button
                 key={cert.id}
                 onClick={() => cert.logo_url && setLightbox(cert)}
-                className={`snap-start flex-shrink-0 w-[78vw] sm:w-[42vw] lg:w-auto group relative flex flex-col bg-[oklch(0.17_0.018_55)] border border-white/8 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400 hover:-translate-y-1 text-left overflow-hidden ${cert.logo_url ? "cursor-pointer" : "cursor-default"}`}
+                className={`snap-start flex-shrink-0 w-[78vw] sm:w-[42vw] lg:w-auto group relative flex flex-col bg-[oklch(0.17_0.018_55)] border border-white/8 text-left overflow-hidden ${cert.logo_url ? "cursor-pointer" : "cursor-default"}`}
+                variants={certItem}
+                whileHover={
+                  cert.logo_url
+                    ? {
+                        rotateY: 4,
+                        rotateX: -2,
+                        scale: 1.02,
+                        borderColor: "oklch(0.72 0.12 65 / 0.35)",
+                        transition: { type: "spring", stiffness: 200, damping: 22 },
+                      }
+                    : {
+                        y: -4,
+                        borderColor: "oklch(0.72 0.12 65 / 0.25)",
+                        transition: { type: "spring", stiffness: 300, damping: 22 },
+                      }
+                }
+                style={{ transformStyle: "preserve-3d", perspective: 800 }}
               >
                 {/* Certificate image preview */}
                 {cert.logo_url && (
@@ -131,7 +163,13 @@ export default function CertificatesSection() {
                     {cert.issuer}
                   </p>
 
-                  <div className="gold-rule mb-4" />
+                  <motion.div
+                    className="mb-4 h-px origin-left"
+                    style={{ background: "linear-gradient(to right, transparent, oklch(0.72 0.12 65 / 0.7), transparent)" }}
+                    initial={{ scaleX: 0 }}
+                    animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
+                    transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  />
 
                   <p
                     className="text-[oklch(0.45_0.02_75)] text-[10px] tracking-[0.25em] uppercase"
@@ -140,50 +178,62 @@ export default function CertificatesSection() {
                     Issued {cert.year}
                   </p>
                 </div>
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
         )}
-
       </div>
 
       {/* Lightbox */}
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setLightbox(null)}
-        >
-          <button
-            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
             onClick={() => setLightbox(null)}
-            aria-label="Close"
           >
-            <X size={28} />
-          </button>
-          <div
-            className="max-w-4xl max-h-[85vh] relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={lightbox.logo_url!}
-              alt={lightbox.title}
-              className="max-w-full max-h-[80vh] object-contain"
-            />
-            <p
-              className="text-center text-[oklch(0.72_0.12_65)] mt-3 italic"
-              style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}
+            <motion.button
+              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+              onClick={() => setLightbox(null)}
+              aria-label="Close"
+              initial={{ opacity: 0, rotate: -45 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
             >
-              {lightbox.title}
-            </p>
-            <p
-              className="text-center text-[oklch(0.50_0.02_75)] text-[10px] tracking-[0.3em] uppercase mt-1"
-              style={{ fontFamily: "var(--font-body)" }}
+              <X size={28} />
+            </motion.button>
+            <motion.div
+              className="max-w-4xl max-h-[85vh] relative"
+              initial={{ scale: 0.88, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 60, damping: 18 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {lightbox.issuer} · {lightbox.year}
-            </p>
-          </div>
-        </div>
-      )}
+              <img
+                src={lightbox.logo_url!}
+                alt={lightbox.title}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+              <p
+                className="text-center text-[oklch(0.72_0.12_65)] mt-3 italic"
+                style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}
+              >
+                {lightbox.title}
+              </p>
+              <p
+                className="text-center text-[oklch(0.50_0.02_75)] text-[10px] tracking-[0.3em] uppercase mt-1"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                {lightbox.issuer} · {lightbox.year}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

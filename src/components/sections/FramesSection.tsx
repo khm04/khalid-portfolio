@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useInView } from "@/hooks/useInView";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useSupabaseList } from "@/lib/useSupabaseList";
 import { X, ZoomIn, Loader2 } from "lucide-react";
 
@@ -21,8 +21,21 @@ const FALLBACK_FRAMES: Frame[] = [
   { id: "6", image_url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80", title: "Window",         film: "From: Brand Film · 2023",           span: "default", sort_order: 5 },
 ];
 
+const spring = { type: "spring" as const, stiffness: 55, damping: 20 };
+
+const staggerGrid = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+};
+
+const frameItem = {
+  hidden: { opacity: 0, y: 32, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: spring },
+};
+
 export default function FramesSection() {
-  const { ref, inView } = useInView<HTMLElement>(0.05);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const { data, loading } = useSupabaseList<Frame>("frames");
   const [lightbox, setLightbox] = useState<Frame | null>(null);
 
@@ -38,10 +51,11 @@ export default function FramesSection() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div
-          className={`flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12 transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        <motion.div
+          className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12"
+          initial={{ opacity: 0, y: 28 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+          transition={spring}
         >
           <div>
             <p
@@ -64,7 +78,6 @@ export default function FramesSection() {
               <em className="text-[oklch(0.72_0.12_65)]">the Cutting Room</em>
             </h2>
           </div>
-
           <p
             className="text-[oklch(0.55_0.02_75)] text-sm max-w-md leading-relaxed"
             style={{ fontFamily: "var(--font-body)", fontWeight: 300 }}
@@ -72,27 +85,37 @@ export default function FramesSection() {
             A single frame from a film tells its own story. These are some I keep
             coming back to — the ones I'd hang on a wall.
           </p>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 size={24} className="animate-spin text-[oklch(0.72_0.12_65)]" />
           </div>
         ) : (
-          <div
-            className={`flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 transition-all duration-700 ${
-              inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
-            style={{ transitionDelay: "150ms", scrollbarWidth: "none" }}
+          <motion.div
+            className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3"
+            style={{ scrollbarWidth: "none" }}
+            variants={staggerGrid}
+            initial="hidden"
+            animate={inView ? "show" : "hidden"}
           >
             {frames.map((frame) => (
-              <button
+              <motion.button
                 key={frame.id}
                 onClick={() => setLightbox(frame)}
                 className={`snap-start flex-shrink-0 w-[78vw] sm:w-auto relative group overflow-hidden text-left ${
                   frame.span === "tall" ? "sm:row-span-2" : ""
                 } ${frame.span === "wide" ? "sm:col-span-2" : ""}`}
+                variants={frameItem}
+                whileHover={{
+                  scale: 1.02,
+                  rotateX: -1.5,
+                  rotateY: 1.5,
+                  transition: { type: "spring", stiffness: 200, damping: 22 },
+                }}
                 style={{
+                  transformStyle: "preserve-3d" as const,
+                  perspective: 800,
                   aspectRatio:
                     frame.span === "tall" ? "auto" : frame.span === "wide" ? "21/9" : "4/3",
                   minHeight: frame.span === "tall" ? 480 : undefined,
@@ -122,50 +145,62 @@ export default function FramesSection() {
                     <ZoomIn size={20} className="text-[oklch(0.72_0.12_65)] flex-shrink-0 mb-1" />
                   </div>
                 </div>
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
         )}
-
       </div>
 
       {/* Lightbox */}
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setLightbox(null)}
-        >
-          <button
-            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={() => setLightbox(null)}
-            aria-label="Close"
           >
-            <X size={28} />
-          </button>
-          <div
-            className="max-w-5xl max-h-[85vh] relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={lightbox.image_url}
-              alt={lightbox.title}
-              className="max-w-full max-h-[80vh] object-contain"
-            />
-            <p
-              className="text-center text-[oklch(0.72_0.12_65)] mt-3 italic"
-              style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}
+            <motion.button
+              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+              onClick={() => setLightbox(null)}
+              aria-label="Close"
+              initial={{ opacity: 0, rotate: -45 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
             >
-              {lightbox.title}
-            </p>
-            <p
-              className="text-center text-[oklch(0.50_0.02_75)] text-[10px] tracking-[0.3em] uppercase mt-1"
-              style={{ fontFamily: "var(--font-body)" }}
+              <X size={28} />
+            </motion.button>
+            <motion.div
+              className="max-w-5xl max-h-[85vh] relative"
+              initial={{ scale: 0.88, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 10 }}
+              transition={{ type: "spring", stiffness: 60, damping: 18 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {lightbox.film}
-            </p>
-          </div>
-        </div>
-      )}
+              <img
+                src={lightbox.image_url}
+                alt={lightbox.title}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+              <p
+                className="text-center text-[oklch(0.72_0.12_65)] mt-3 italic"
+                style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}
+              >
+                {lightbox.title}
+              </p>
+              <p
+                className="text-center text-[oklch(0.50_0.02_75)] text-[10px] tracking-[0.3em] uppercase mt-1"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                {lightbox.film}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

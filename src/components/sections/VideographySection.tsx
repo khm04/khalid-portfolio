@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useInView } from "@/hooks/useInView";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import VideoModal from "@/components/VideoModal";
 import { Play, Film, Loader2 } from "lucide-react";
@@ -29,11 +29,25 @@ const FALLBACK_PROJECTS: Video[] = [
   { id: "3", thumb_url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80", title: "Soleil — Fashion Campaign",  category: "Commercial",   duration: "2:48",  year: "2023", embed_url: "", is_showreel: false, sort_order: 3 },
 ];
 
+const spring = { type: "spring" as const, stiffness: 55, damping: 20 };
+
+const staggerCards = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+
+const cardItem = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: spring },
+};
+
 function VideoCard({ project, onOpen }: { project: Video; onOpen: (v: Video) => void }) {
   return (
-    <button
+    <motion.button
       onClick={() => onOpen(project)}
-      className="group relative overflow-hidden text-left border border-white/5 hover:border-[oklch(0.72_0.12_65/0.3)] transition-all duration-400"
+      className="group relative overflow-hidden text-left border border-white/5 hover:border-[oklch(0.72_0.12_65/0.3)] transition-colors duration-400"
+      variants={cardItem}
+      whileHover={{ y: -6, transition: { type: "spring", stiffness: 300, damping: 22 } }}
     >
       <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
         <img
@@ -41,7 +55,7 @@ function VideoCard({ project, onOpen }: { project: Video; onOpen: (v: Video) => 
           alt={project.title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-[oklch(0.10_0.015_55/0.50)] group-hover:bg-[oklch(0.10_0.015_55/0.30)] transition-colors duration-400" />
+        <div className="absolute inset-0 bg-[oklch(0.10_0.015_55/0.50)] group-hover:bg-[oklch(0.10_0.015_55/0.25)] transition-colors duration-400" />
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="w-12 h-12 rounded-full border border-[oklch(0.72_0.12_65)] flex items-center justify-center">
             <Play size={16} className="text-[oklch(0.72_0.12_65)] ml-0.5" fill="currentColor" />
@@ -70,20 +84,22 @@ function VideoCard({ project, onOpen }: { project: Video; onOpen: (v: Video) => 
           {project.title}
         </h3>
       </div>
-    </button>
+    </motion.button>
   );
 }
 
-function GenreSection({ section, onOpen, inView, delay }: {
+function GenreSection({ section, onOpen, inView }: {
   section: Section;
   onOpen: (v: Video) => void;
   inView: boolean;
-  delay: number;
 }) {
   return (
-    <div
-      className={`mb-16 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-      style={{ transitionDelay: `${delay}ms` }}
+    <motion.div
+      className="mb-16"
+      initial="hidden"
+      animate={inView ? "show" : "hidden"}
+      variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
+      transition={{ duration: 0.4 }}
     >
       <div className="flex items-center gap-4 mb-6">
         <h3
@@ -101,22 +117,26 @@ function GenreSection({ section, onOpen, inView, delay }: {
           {section.videos.length} {section.videos.length === 1 ? "film" : "films"}
         </span>
       </div>
-      <div
+      <motion.div
         className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0"
         style={{ scrollbarWidth: "none" }}
+        variants={staggerCards}
+        initial="hidden"
+        animate={inView ? "show" : "hidden"}
       >
         {section.videos.map((v) => (
           <div key={v.id} className="snap-start flex-shrink-0 w-[78vw] md:w-auto">
             <VideoCard project={v} onOpen={onOpen} />
           </div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export default function VideographySection() {
-  const { ref, inView } = useInView<HTMLElement>(0.05);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const [showreel, setShowreel] = useState<Video | null>(null);
   const [genreSections, setGenreSections] = useState<Section[]>([]);
   const [otherVideos, setOtherVideos] = useState<Video[]>([]);
@@ -124,6 +144,7 @@ export default function VideographySection() {
   const [modalUrl, setModalUrl] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string | undefined>();
   const [activeId, setActiveId] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -185,8 +206,11 @@ export default function VideographySection() {
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div
-          className={`mb-12 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        <motion.div
+          className="mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={spring}
         >
           <p
             className="text-[oklch(0.72_0.12_65)] text-[10px] tracking-[0.4em] uppercase mb-3"
@@ -202,7 +226,7 @@ export default function VideographySection() {
             <br />
             <em className="text-[oklch(0.72_0.12_65)]">Living Memories</em>
           </h2>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -211,9 +235,12 @@ export default function VideographySection() {
         ) : (
           <>
             {/* Showreel */}
-            <div
-              className={`relative w-full overflow-hidden mb-16 transition-all duration-900 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-              style={{ transitionDelay: "150ms", aspectRatio: "16/9", maxHeight: 520 }}
+            <motion.div
+              className="relative w-full overflow-hidden mb-16"
+              style={{ aspectRatio: "16/9", maxHeight: 520 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ ...spring, delay: 0.15 }}
             >
               <img
                 src={showreel?.thumb_url || FALLBACK_SHOWREEL_THUMB}
@@ -222,13 +249,25 @@ export default function VideographySection() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.10_0.015_55/0.70)] to-transparent" />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <button
-                  onClick={() => showreel && openModal(showreel)}
-                  className="w-20 h-20 rounded-full border-2 border-[oklch(0.72_0.12_65)] flex items-center justify-center text-[oklch(0.72_0.12_65)] hover:bg-[oklch(0.72_0.12_65)] hover:text-[oklch(0.14_0.018_55)] transition-all duration-300 group"
-                  aria-label="Play showreel"
-                >
-                  <Play size={28} className="ml-1 group-hover:scale-110 transition-transform" fill="currentColor" />
-                </button>
+                {/* Sonar pulse rings */}
+                <div className="relative flex items-center justify-center">
+                  {[0, 0.7, 1.4].map((delay) => (
+                    <motion.div
+                      key={delay}
+                      className="absolute rounded-full border border-[oklch(0.72_0.12_65/0.35)]"
+                      style={{ width: 80, height: 80 }}
+                      animate={{ scale: [1, 2.6], opacity: [0.6, 0] }}
+                      transition={{ duration: 2.8, delay, repeat: Infinity, ease: "easeOut" }}
+                    />
+                  ))}
+                  <button
+                    onClick={() => showreel && openModal(showreel)}
+                    className="relative z-10 w-20 h-20 rounded-full border-2 border-[oklch(0.72_0.12_65)] flex items-center justify-center text-[oklch(0.72_0.12_65)] hover:bg-[oklch(0.72_0.12_65)] hover:text-[oklch(0.14_0.018_55)] transition-all duration-300 group"
+                    aria-label="Play showreel"
+                  >
+                    <Play size={28} className="ml-1 group-hover:scale-110 transition-transform" fill="currentColor" />
+                  </button>
+                </div>
                 <p
                   className="text-[oklch(0.92_0.02_75)] text-[10px] tracking-[0.35em] uppercase"
                   style={{ fontFamily: "var(--font-body)" }}
@@ -245,13 +284,15 @@ export default function VideographySection() {
                   Khalid Films — 2024 Reel
                 </span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Genre filter tabs */}
             {!showFallback && allSections.length > 0 && (
-              <div
-                className={`mb-12 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-                style={{ transitionDelay: "250ms" }}
+              <motion.div
+                className="mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ ...spring, delay: 0.25 }}
               >
                 <div
                   className="flex border-b border-white/8 overflow-x-auto"
@@ -273,8 +314,6 @@ export default function VideographySection() {
                     </button>
                   ))}
                 </div>
-
-                {/* Prompt when nothing selected */}
                 {!activeId && (
                   <p
                     className="text-[oklch(0.35_0.02_75)] text-[9px] tracking-[0.3em] uppercase mt-4"
@@ -283,34 +322,44 @@ export default function VideographySection() {
                     Select a genre to explore
                   </p>
                 )}
-              </div>
+              </motion.div>
             )}
 
-            {/* Active genre section only */}
-            {!showFallback && activeId && (() => {
-              const section = allSections.find(s => s.id === activeId);
-              if (!section) return null;
-              return (
-                <GenreSection
-                  key={section.id}
-                  section={section}
-                  onOpen={openModal}
-                  inView={inView}
-                  delay={0}
-                />
-              );
-            })()}
+            {/* Active genre section */}
+            <AnimatePresence mode="wait">
+              {!showFallback && activeId && (() => {
+                const section = allSections.find(s => s.id === activeId);
+                if (!section) return null;
+                return (
+                  <motion.div
+                    key={section.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={spring}
+                  >
+                    <GenreSection
+                      section={section}
+                      onOpen={openModal}
+                      inView={inView}
+                    />
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
 
-            {/* Fallback when no DB data */}
+            {/* Fallback */}
             {showFallback && (
-              <div
-                className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                style={{ transitionDelay: "300ms" }}
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                variants={staggerCards}
+                initial="hidden"
+                animate={inView ? "show" : "hidden"}
               >
                 {FALLBACK_PROJECTS.map((project) => (
                   <VideoCard key={project.id} project={project} onOpen={openModal} />
                 ))}
-              </div>
+              </motion.div>
             )}
           </>
         )}

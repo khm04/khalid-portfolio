@@ -1,11 +1,9 @@
 /**
  * ContactSection
  * Contact info (email + Instagram) on left, form on right.
- * In Phase 2, the form will POST to /api/messages and persist to Supabase.
- * For now, it resolves locally with a success toast.
  */
-import { useInView } from "@/hooks/useInView";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
 import { Mail, Instagram, MapPin, Phone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -15,8 +13,21 @@ const PHONE = "0795293873";
 const INSTAGRAM_HANDLE = "khalid._.masoud";
 const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
 
+const spring = { type: "spring" as const, stiffness: 55, damping: 20 };
+
+const staggerInfo = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+};
+
+const infoItem = {
+  hidden: { opacity: 0, x: -24 },
+  show: { opacity: 1, x: 0, transition: { type: "spring" as const, stiffness: 65, damping: 20 } },
+};
+
 export default function ContactSection() {
-  const { ref, inView } = useInView<HTMLElement>(0.05);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.05 });
   const [form, setForm] = useState({ name: "", email: "", service: "", message: "" });
   const [sending, setSending] = useState(false);
 
@@ -64,10 +75,11 @@ export default function ContactSection() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div
-          className={`mb-16 transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 28 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+          transition={spring}
         >
           <p
             className="text-[oklch(0.72_0.12_65)] text-[10px] tracking-[0.4em] uppercase mb-3"
@@ -88,16 +100,16 @@ export default function ContactSection() {
             <br />
             <em className="text-[oklch(0.72_0.12_65)]">Something Beautiful</em>
           </h2>
-        </div>
+        </motion.div>
 
-        <div
-          className={`grid lg:grid-cols-5 gap-12 lg:gap-16 transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-          style={{ transitionDelay: "150ms" }}
-        >
-          {/* Info */}
-          <div className="lg:col-span-2 flex flex-col gap-8">
+        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
+          {/* Info — slides from left */}
+          <motion.div
+            className="lg:col-span-2 flex flex-col gap-8"
+            initial={{ opacity: 0, x: -40 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -40 }}
+            transition={{ ...spring, delay: 0.1 }}
+          >
             <p
               className="text-[oklch(0.65_0.02_75)] leading-relaxed"
               style={{ fontFamily: "var(--font-body)", fontWeight: 300 }}
@@ -107,10 +119,16 @@ export default function ContactSection() {
               bringing your vision to life.
             </p>
 
-            <div className="flex flex-col gap-5">
-              <a
+            <motion.div
+              className="flex flex-col gap-5"
+              variants={staggerInfo}
+              initial="hidden"
+              animate={inView ? "show" : "hidden"}
+            >
+              <motion.a
                 href={`mailto:${EMAIL}`}
                 className="flex items-start gap-4 group"
+                variants={infoItem}
               >
                 <div className="w-9 h-9 border border-[oklch(0.72_0.12_65/0.4)] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[oklch(0.72_0.12_65/0.1)] transition-colors">
                   <Mail size={14} className="text-[oklch(0.72_0.12_65)]" />
@@ -129,11 +147,12 @@ export default function ContactSection() {
                     {EMAIL}
                   </p>
                 </div>
-              </a>
+              </motion.a>
 
-              <a
+              <motion.a
                 href={`tel:${PHONE}`}
                 className="flex items-start gap-4 group"
+                variants={infoItem}
               >
                 <div className="w-9 h-9 border border-[oklch(0.72_0.12_65/0.4)] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[oklch(0.72_0.12_65/0.1)] transition-colors">
                   <Phone size={14} className="text-[oklch(0.72_0.12_65)]" />
@@ -152,13 +171,14 @@ export default function ContactSection() {
                     {PHONE}
                   </p>
                 </div>
-              </a>
+              </motion.a>
 
-              <a
+              <motion.a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-4 group"
+                variants={infoItem}
               >
                 <div className="w-9 h-9 border border-[oklch(0.72_0.12_65/0.4)] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[oklch(0.72_0.12_65/0.1)] transition-colors">
                   <Instagram size={14} className="text-[oklch(0.72_0.12_65)]" />
@@ -177,9 +197,12 @@ export default function ContactSection() {
                     @{INSTAGRAM_HANDLE}
                   </p>
                 </div>
-              </a>
+              </motion.a>
 
-              <div className="flex items-start gap-4">
+              <motion.div
+                className="flex items-start gap-4"
+                variants={infoItem}
+              >
                 <div className="w-9 h-9 border border-[oklch(0.72_0.12_65/0.4)] flex items-center justify-center flex-shrink-0 mt-0.5">
                   <MapPin size={14} className="text-[oklch(0.72_0.12_65)]" />
                 </div>
@@ -197,11 +220,21 @@ export default function ContactSection() {
                     Jordan
                   </p>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Availability */}
-            <div className="border-l-2 border-[oklch(0.72_0.12_65)] pl-4">
+            <motion.div
+              className="border border-[oklch(0.72_0.12_65/0.25)] bg-[oklch(0.72_0.12_65/0.04)] px-5 py-4"
+              variants={infoItem}
+              initial="hidden"
+              animate={inView ? "show" : "hidden"}
+            >
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full bg-[oklch(0.72_0.12_65)] mb-3"
+                animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+              />
               <p
                 className="text-[oklch(0.72_0.12_65)] text-xs font-medium mb-0.5"
                 style={{ fontFamily: "var(--font-body)" }}
@@ -214,11 +247,17 @@ export default function ContactSection() {
               >
                 Limited slots available. Book early to secure your date.
               </p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="lg:col-span-3 flex flex-col gap-4">
+          {/* Form — slides from right */}
+          <motion.form
+            onSubmit={handleSubmit}
+            className="lg:col-span-3 flex flex-col gap-4"
+            initial={{ opacity: 0, x: 40 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 40 }}
+            transition={{ ...spring, delay: 0.18 }}
+          >
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -297,16 +336,19 @@ export default function ContactSection() {
               />
             </div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={sending}
-              className="self-start flex items-center gap-3 px-8 py-3.5 bg-[oklch(0.72_0.12_65)] text-[oklch(0.14_0.018_55)] text-[11px] tracking-[0.25em] uppercase font-semibold hover:bg-[oklch(0.78_0.13_65)] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-[oklch(0.72_0.12_65/0.3)]"
+              className="self-start flex items-center gap-3 px-8 py-3.5 bg-[oklch(0.72_0.12_65)] text-[oklch(0.14_0.018_55)] text-[11px] tracking-[0.25em] uppercase font-semibold disabled:opacity-60 disabled:cursor-not-allowed btn-magnetic btn-fill"
               style={{ fontFamily: "var(--font-body)" }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
             >
               {sending ? "Sending..." : "Send Message"}
               <Send size={14} />
-            </button>
-          </form>
+            </motion.button>
+          </motion.form>
         </div>
       </div>
     </section>
